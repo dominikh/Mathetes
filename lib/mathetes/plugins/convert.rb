@@ -9,12 +9,13 @@
 require "open-uri"
 require "cgi"
 
-module Mathetes; module Plugins
+module Cinch
+  module Plugins
+    class Converter
+      include Cinch::Plugin
 
-  class Converter
-    def initialize( mathetes )
-      mathetes.hook_privmsg( :regexp => /^!(conv(ert)?|calc)\b/ ) do |message|
-        arg = CGI.escape( message.text[ /^\S+\s+(.*)/, 1 ] )
+      match(/(?:conv(?:ert)|calc) +(.*)$/)
+      def execute(m, arg)
         open( "http://www.google.com/search?q=#{ arg }" ) do |html|
           answered = false
           html.read.scan %r{<h2.*style="font-size:138%"><b>(.+?)</b></h2>}m do |result|
@@ -23,16 +24,15 @@ module Mathetes; module Plugins
             stripped_result = stripped_result.gsub( /<font size=-2> <\/font>/, "" )
             stripped_result = stripped_result.gsub( /<[^>]+>/, "" )
             stripped_result = stripped_result.gsub( /&times;/, "x" )
-            message.answer stripped_result
+            m.reply stripped_result
             answered = true
             break
           end
           if ! answered
-            message.answer "(no results)"
+            m.reply "(no results)"
           end
         end
       end
     end
   end
-
-end; end
+end
