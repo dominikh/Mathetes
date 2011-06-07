@@ -1,15 +1,12 @@
-module Mathetes; module Plugins
-  class Sample
-    def initialize( mathetes )
-      mathetes.hook_privmsg(
-        :regexp => /^!foo\b/
-      ) do |message|
-        handle_privmsg message
+module Cinch
+  module Plugins
+    class Sample
+      include Cinch::Plugin
+
+      match(/foo\b/)
+      def execute(m)
+        m.reply "Foo to you!"
       end
     end
-
-    def handle_privmsg( message )
-      message.answer "Foo to you!"
-    end
   end
-end; end
+end
