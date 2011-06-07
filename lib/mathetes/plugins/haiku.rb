@@ -1,12 +1,13 @@
 require 'open-uri'
 require 'nokogiri'
 
-module Mathetes; module Plugins
+module Cinch
+  module Plugins
+    class Haiku
+      include Cinch::Plugin
 
-  class Haiku
-
-    def initialize( mathetes )
-      mathetes.hook_privmsg( :regexp => /^!haiku\b/ ) do |message|
+      match "haiku"
+      def execute(m)
         haikus = Nokogiri::HTML(
           open "http://www.dailyhaiku.org/haiku/?pg=#{ rand(220) + 1 }"
         ).search( 'p.haiku' ).to_a
@@ -16,11 +17,9 @@ module Mathetes; module Plugins
         }
         haiku_lines.each do |line|
           sleep 3
-          message.answer( '     ' + line.center( width ) )
+          m.reply( '     ' + line.center( width ) )
         end
       end
     end
-
   end
-
-end; end
+end
