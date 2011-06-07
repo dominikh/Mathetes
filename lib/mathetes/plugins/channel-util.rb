@@ -1,34 +1,32 @@
-module Mathetes; module Plugins
+module Cinch
+  module Plugins
+    class ChannelUtil
+      include Cinch::Plugin
 
-  class ChannelUtil
+      match("op", method: :op)
+      match(/join (#[A-z0-9_-]+)/, method: :join)
+      match(/part (#[A-z0-9_-]+)/, method: :part)
 
-    ADMINS = [
-      'Pistos',
-    ]
-
-    def initialize( mathetes )
-      @mathetes = mathetes
-
-      mathetes.hook_privmsg( :regexp => /^!op\b/ ) do |message|
-        c = message.channel
-        if c
-          @mathetes.say "OP #{ c }", 'ChanServ'
+      def op(m)
+        if m.channel
+          User("ChanServ").send("OP #{m.channel}")
         end
       end
 
-      mathetes.hook_privmsg( :regexp => /^!join (#[A-z0-9_-]+)/ ) do |message|
-        channel = SilverPlatter::IRC::Channel.new( $1 )
-        break  if ! ADMINS.include?( message.from.nick )
-        @mathetes.join_channels( [ channel ] )
+      def join(m, channel)
+        return  if ! admin?( m.user )
+        Channel(channel).join
       end
 
-      mathetes.hook_privmsg( :regexp => /^!part (#[A-z0-9_-]+)/ ) do |message|
-        channel = SilverPlatter::IRC::Channel.new( $1 )
-        break  if ! ADMINS.include?( message.from.nick )
-        @mathetes.part_channels( [ channel ] )
+      def part(m, channel)
+        return  if ! admin?( m.user )
+        Channel(channel).part
+      end
+
+      private
+      def admin?(user)
+        config[:admins].include?( user.nick )
       end
     end
-
   end
-
-end; end
+end
