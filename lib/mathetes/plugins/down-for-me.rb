@@ -2,19 +2,16 @@ require 'cgi'
 require 'open-uri'
 require 'nokogiri'
 
-module Mathetes; module Plugins
+module Cinch
+  module Plugins
+    class DownForMe
+      include Cinch::Plugin
 
-  class DownForMe
-
-    def initialize( mathetes )
-      mathetes.hook_privmsg( :regexp => /^(!(up|down)|(up|down)\?)\b/ ) do |message|
-        terms = message.text[ /^\S+\s+(.*)/, 1 ]
-        site = terms.downcase[ /([a-z0-9.-]+)($|\/)/, 1 ]
+      match(/(?:up|down)\?? +(.+)/)
+      def execute(m, site)
         doc = Nokogiri::HTML( open( "http://www.downforeveryoneorjustme.com/#{site}" ) )
-        message.answer "#{message.from.nick}: [#{site}] " + doc.at( 'div#container' ).children.select{ |e| e.text? }.join( ' ' ).gsub( /\s+/, ' ' ).strip
+        m.reply "#{message.from.nick}: [#{site}] " + doc.at( 'div#container' ).children.select{ |e| e.text? }.join( ' ' ).gsub( /\s+/, ' ' ).strip
       end
     end
-
   end
-
-end; end
+end
