@@ -1,14 +1,14 @@
 require 'open-uri'
 require 'nokogiri'
 
-module Mathetes; module Plugins
+module Cinch
+  module Plugins
+    class Dictionary
+      include Cinch::Plugin
 
-  class Dictionary
-
-    def initialize( mathetes )
-      mathetes.hook_privmsg( :regexp => /^!d(ict)?\b/ ) do |message|
+      match(/d(?:dict)? +(.+)/)
+      def execute(m, arg)
         catch :done do
-          arg = CGI.escape( message.text[ /^\S+\s+(.*)/, 1 ] )
           doc = Nokogiri::HTML(
             open( "http://www.wordsmyth.net/?level=3&m=wn&ent=#{arg}" )
           )
@@ -20,7 +20,7 @@ module Mathetes; module Plugins
             if suggestions.any?
               output << " Close matches: #{suggestions.join( ', ' )}"
             end
-            message.answer output
+            m.reply output
 
             throw :done
           end
@@ -64,12 +64,10 @@ module Mathetes; module Plugins
               }
               output << defs.join( ' ' )
             end
-            message.answer output
+            m.reply output
           end
         end
       end
     end
-
   end
-
-end; end
+end
