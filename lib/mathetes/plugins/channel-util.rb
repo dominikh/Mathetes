@@ -4,8 +4,8 @@ module Cinch
       include Cinch::Plugin
 
       match("op", method: :op)
-      match(/join (#[A-z0-9_-]+)/, method: :join)
-      match(/part (#[A-z0-9_-]+)/, method: :part)
+      match(/join (#[A-Z0-9_-]+)/i, method: :join)
+      match(/part (#[A-Z0-9_-]+)/i, method: :part)
 
       def op(m)
         if m.channel
