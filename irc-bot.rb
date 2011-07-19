@@ -1,6 +1,3 @@
-require 'silverplatter/log'
-require 'silverplatter/irc/connection'
-
 require 'mathetes'
 require 'traited'
 require 'yaml'
@@ -26,16 +23,7 @@ module Mathetes
   DONT_LOAD_CONF = false
 
   class IRCBot
-    def initialize
-      @conf = YAML.load_file 'mathetes-config.yaml'
-      @irc = SilverPlatter::IRC::Connection.new(
-        @conf['server']['host'],
-        :log => SilverPlatter::Log.to_console( :formatter => SilverPlatter::Log::ColoredDebugConsole )
-      )
-      reset DONT_LOAD_CONF
-      puts "Initialized."
-    end
-
+    # TODO this will require some tinkering, and Cinch 1.2.0 (unloading feature)
     def reset( load_conf = DO_LOAD_CONF )
       puts "Resetting..."
 
@@ -45,13 +33,13 @@ module Mathetes
       if load_conf
         @conf = YAML.load_file 'mathetes-config.yaml'
       end
-      initialize_hooks
       initialize_plugins
       join_channels parted
 
       puts "Reset."
     end
 
+    # TODO won't be needed
     def kill_threads
       if @threads
         @threads.each do |t|
@@ -61,6 +49,7 @@ module Mathetes
       @threads = Array.new
     end
 
+    # TODO won't be needed
     def unsubscribe_listeners
       return  if @hooks.nil?
       @hooks[ :JOIN ].each do |hook|
@@ -76,81 +65,7 @@ module Mathetes
       channels || []
     end
 
-    def initialize_hooks
-      @hooks = {
-        :PRIVMSG => Array.new,
-        :NOTICE => Array.new,
-        :JOIN => Array.new,
-      }
-    end
-
-    def initialize_plugins
-      @conf[ 'plugins' ].each do |plugin|
-        begin
-          load "mathetes/plugins/#{plugin}.rb"
-        rescue Exception => e
-          $stderr.puts "Plugin load error: #{e.message}"
-          $stderr.puts e.backtrace.join( "\n\t" )
-        end
-      end
-
-      Plugins.constants.each do |cname|
-        constant = Plugins.const_get( cname )
-        if constant.respond_to?( :new )
-          constant.new( self )
-        end
-      end
-    end
-
-    def join_channels( channels = [] )
-      channels.each do |c|
-        @irc.send_join c.name
-        channel = @conf[ 'channels' ].find { |ch| ch[ 'name' ] == c.name }
-        if channel && channel[ 'ops' ]
-          @irc.send_privmsg "OP #{ channel[ 'name' ] }", 'ChanServ'
-        end
-      end
-    end
-
-    def start
-      puts "Starting... "
-
-      File.open( 'mathetes.pid', 'w' ) do |f|
-        f.puts Process.pid
-      end
-
-      @irc.connect
-      @irc.login( @conf[ 'nick' ], 'Mathetes', 'Mathetes Christou' )
-      @irc.send_privmsg "IDENTIFY #{ @conf[ 'password' ] }", 'NickServ'
-      @conf[ 'channels' ].each do |channel|
-        @irc.send_join channel[ 'name' ]
-        if channel[ 'ops' ]
-          @irc.send_privmsg "OP #{ channel[ 'name' ] }", 'ChanServ'
-        end
-      end
-
-      puts "Startup complete."
-
-      @irc.read_loop do |message|
-        case message.symbol
-        when :PRIVMSG, :NOTICE
-          next  if @conf[ 'ignores' ].find { |ignored_nick|
-            message && message.from && SilverPlatter::IRC::Hostmask.new( ignored_nick, "*", "*", @irc ) =~ message.from
-          }
-          @hooks[ message.symbol ].each do |h|
-            if h.regexp.nil? || h.regexp =~ message.text
-              h.call( message )
-            end
-          end
-        end
-      end
-    end
-
     # --------------------------------------------
-
-    def say( message, destination )
-      @irc.send_privmsg( message, destination )
-    end
 
     def ban( user, channel, seconds = 24 * 60 * 60 )
       @irc.send_raw( 'MODE', channel, '+b', user.hostmask.to_s )
@@ -160,36 +75,14 @@ module Mathetes
       end
     end
 
-    def kick( *args )
-      @irc.send_kick *args
-    end
-
-    def nick
-      @conf[ 'nick' ]
-    end
-
     # --------------------------------------------
-
-    def hook_notice( args = {}, &block )
-      @hooks[ :NOTICE ] << Hooks::NOTICE.new( args, &block )
-    end
-
-    def hook_privmsg( args = {}, &block )
-      @hooks[ :PRIVMSG ] << Hooks::PRIVMSG.new( args, &block )
-    end
-
-    def hook_join( &block )
-      listener = @irc.subscribe( :JOIN ) do |listener,message|
-        block.call( message )
-      end
-      @hooks[ :JOIN ] << listener
-    end
 
     def new_thread( &block )
       t = Thread.new do
         begin
           block.call
         rescue Exception => e
+          # TODO use the built-in Cinch method to capture exceptions
           $stderr.puts "Exception in thread: #{e.class}: #{e}"
           $stderr.puts e.backtrace.join( "\n\t" )
         end
@@ -201,10 +94,66 @@ module Mathetes
   end
 end
 
-$mathetes = Mathetes::IRCBot.new
+require "cinch"
+require "cinch/plugins/identify" # DEP cinch-identify
 
-Signal.trap( 'HUP' ) do
-  $mathetes.reset
+module Cinch
+  module Plugins
+    class RequestOpOnJoin
+      include Cinch::Plugin
+
+      listen_to :join
+      def listen(m)
+        return if m.user != @bot
+        return if ! config[:channels].include?(m.channel.name)
+        User("ChanServ").send "OP #{m.channel}"
+      end
+    end
+  end
 end
 
-$mathetes.start
+include Cinch
+mathetes = Bot.new do
+  configure do |c|
+    conf = YAML.load_file 'mathetes-config.yaml'
+
+    c.server   = conf['server']['host']
+    c.nick     = conf['nick']
+    c.user     = "Mathetes"
+    c.realname = "Mathetes Christou"
+    c.channels = conf['channels'].map { |h| h["name"] }
+
+    c.plugins.plugins = [Plugins::RequestOpOnJoin]
+
+    if conf['password']
+      c.plugins.plugins << Plugins::Identify
+      c.plugins.options[Plugins::Identify] = {
+        :username => conf['nick'],
+        :password => conf['password'],
+        :type     => :nickserv,
+      }
+    end
+
+    c.plugins.options[Plugins::RequestOpOnJoin] = {
+      :channels => conf['channels'].select { |h| h["ops"] }.map { |h| h["name"] },
+    }
+
+    c.plugins.options[Plugins::ChannelUtil] = {
+      :admins => ["Pistos"],
+    }
+
+    # TODO load all plugins from config
+  end
+end
+
+File.open( 'mathetes.pid', 'w' ) do |f|
+  f.puts Process.pid
+end
+
+Signal.trap( 'HUP' ) do
+  # TODO well, try to figure out the reload thing...
+end
+
+# TODO support filtering (ignoring) certain people/hostmasks
+
+mathetes.start
