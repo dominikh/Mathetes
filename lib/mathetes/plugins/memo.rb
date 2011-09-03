@@ -1,40 +1,102 @@
 require 'm4dbi'
 
-module Mathetes; module Plugins
+module Mathetes
+  module Plugins
+    class MemoManager
+      include Cinch::Plugin
 
-  class MemoManager
-    # Add bot names to this list, if you like.
-    IGNORED = [
-        "",
-        "*",
-        "Gherkins",
-        "Mathetes",
-        "GeoBot",
-        "scry",
-    ]
-    MAX_MEMOS_PER_PERSON = 20
-    PUBLIC_READING_THRESHOLD = 2
+      # Add bot names to this list, if you like.
+      # TODO put this into a config
+      IGNORED = [
+                 "",
+                 "*",
+                 "Gherkins",
+                 "Mathetes",
+                 "GeoBot",
+                 "scry",
+                ]
 
-    def initialize( mathetes )
-      @mathetes = mathetes
-      @mathetes.hook_privmsg(
-        :regexp => /^!memo\b/
-      ) do |message|
-        record_memo message
-      end
-      @mathetes.hook_privmsg do |message|
-        handle_privmsg message
-      end
-      @mathetes.hook_join do |message|
-        handle_join message
+      # TODO put this into a config
+      MAX_MEMOS_PER_PERSON = 20
+      # TODO put this into a config
+      PUBLIC_READING_THRESHOLD = 2
+
+      def initialize(*args)
+        super
+        # TODO config
+        @dbh = DBI.connect( "DBI:Pg:reby-memo:localhost", "memo", "memo" )
       end
 
-      @dbh = DBI.connect( "DBI:Pg:reby-memo:localhost", "memo", "memo" )
-    end
+      match(/memo ([\S]+) (.+)/)
+      listen_to :message, method: :on_message
+      listen_to :join, method: :on_join
 
-    def memos_for( recipient )
-      @dbh.select_all(
-        %{
+      def execute(m, recipient, message)
+        if recipient =~ %r{^/(.*)/$}
+          recipient_regexp = Regexp.new $1
+          @dbh.do(
+                  "INSERT INTO memos ( sender, recipient_regexp, message ) VALUES ( ?, ?, ? )",
+                  m.user.nick,
+                  recipient_regexp.source,
+                  message
+                  )
+          m.reply "Memo recorded for /#{recipient_regexp.source}/.", true
+        else
+          if memos_for( recipient ).size >= MAX_MEMOS_PER_PERSON
+            m.reply "The inbox of #{recipient} is full."
+          else
+            @dbh.do(
+                    "INSERT INTO memos ( sender, recipient, message ) VALUES ( ?, ?, ? )",
+                    m.user.nick,
+                    recipient,
+                    message
+                    )
+            m.reply "Memo recorded for #{recipient}.", true
+          end
+        end
+      end
+
+      def on_message(m)
+        return  if IGNORED.include?( m.user.nick )
+
+        memos = memos_for( m.user.nick )
+        if memos.size <= PUBLIC_READING_THRESHOLD && m.channel?
+          dest = m.channel
+        else
+          dest = m.user
+        end
+
+        memos.each do |memo|
+          age = memo[ 'sent_age' ].gsub( /\.\d+$/, '' )
+          case age
+          when /^00:00:(\d+)/
+            age = "#{$1} seconds"
+          when /^00:(\d+):(\d+)/
+            age = "#{$1}m #{$2}s"
+          else
+            age.gsub( /^(.*)(\d+):(\d+):(\d+)/, "\\1 \\2h \\3m \\4s" )
+          end
+          dest.send "#{m.user.nick}: [#{age} ago] <#{memo['sender']}> #{memo['message']}"
+
+          @dbh.do(
+                  "UPDATE memos SET time_told = NOW() WHERE id = ?",
+                  memo[ 'id' ]
+                  )
+        end
+      end
+
+      def on_join(m)
+        return  if IGNORED.include?( m.user.nick )
+
+        memos = memos_for( m.user.nick )
+        if memos.size > 0
+          m.user.send "You have #{memos.size} memo(s).  Speak publicly in a channel to retrieve them."
+        end
+      end
+
+      def memos_for( recipient )
+        @dbh.select_all(
+                        %{
           SELECT
             m.*,
             age( NOW(), m.time_sent )::TEXT AS sent_age
@@ -47,85 +109,10 @@ module Mathetes; module Plugins
             )
             AND m.time_told IS NULL
         },
-        recipient,
-        recipient
-      )
-    end
-
-    def record_memo( privmsg )
-      args = privmsg.text[ /^\S+\s+(.*)/, 1 ]
-
-      sender = nick = privmsg.from.nick
-      recipient, message = args.split( /\s+/, 2 )
-
-      if sender.nil? || recipient.nil? || message.nil? || recipient.empty? || message.empty?
-        privmsg.answer "#{nick}: !memo <recipient> <message>"
-        return
-      end
-
-      if recipient =~ %r{^/(.*)/$}
-        recipient_regexp = Regexp.new $1
-        @dbh.do(
-          "INSERT INTO memos ( sender, recipient_regexp, message ) VALUES ( ?, ?, ? )",
-          sender,
-          recipient_regexp.source,
-          message
-        )
-        privmsg.answer "#{nick}: Memo recorded for /#{recipient_regexp.source}/."
-      else
-        if memos_for( recipient ).size >= MAX_MEMOS_PER_PERSON
-          privmsg.answer "The inbox of #{recipient} is full."
-        else
-          @dbh.do(
-            "INSERT INTO memos ( sender, recipient, message ) VALUES ( ?, ?, ? )",
-            sender,
-            recipient,
-            message
-          )
-          privmsg.answer "#{nick}: Memo recorded for #{recipient}."
-        end
+                        recipient,
+                        recipient
+                        )
       end
     end
-
-    def handle_privmsg( message )
-      nick = message.from.nick
-      return  if IGNORED.include?( nick )
-
-      memos = memos_for( nick )
-      if memos.size <= PUBLIC_READING_THRESHOLD && message.channel
-        dest = message.channel.name
-      else
-        dest = nick
-      end
-
-      memos.each do |memo|
-        age = memo[ 'sent_age' ].gsub( /\.\d+$/, '' )
-        case age
-        when /^00:00:(\d+)/
-          age = "#{$1} seconds"
-        when /^00:(\d+):(\d+)/
-          age = "#{$1}m #{$2}s"
-        else
-          age.gsub( /^(.*)(\d+):(\d+):(\d+)/, "\\1 \\2h \\3m \\4s" )
-        end
-        @mathetes.say( "#{nick}: [#{age} ago] <#{memo['sender']}> #{memo['message']}", dest )
-        @dbh.do(
-          "UPDATE memos SET time_told = NOW() WHERE id = ?",
-          memo[ 'id' ]
-        )
-      end
-    end
-
-    def handle_join( message )
-      nick = message.from.nick
-      return  if IGNORED.include?( nick )
-
-      memos = memos_for( nick )
-      if memos.size > 0
-        @mathetes.say "You have #{memos.size} memo(s).  Speak publicly in a channel to retrieve them.", nick
-      end
-    end
-
   end
-
-end; end
+end
