@@ -1,14 +1,15 @@
 require 'open-uri'
 require 'nokogiri'
 
-module Mathetes
+module Cinch
   module Plugins
-    class Commit
-      def initialize(mathetes)
-        mathetes.hook_privmsg(:regexp => /^!commit\b/) do |msg|
-          open 'http://whatthecommit.com/' do |io|
-            msg.answer Nokogiri::HTML(io).css('#content > p').text.strip
-          end
+    class WhatTheCommit
+      include Cinch::Plugin
+
+      match("commit")
+      def execute(m)
+        open 'http://whatthecommit.com/' do |io|
+          m.reply Nokogiri::HTML(io).css('#content > p').text.strip
         end
       end
     end
