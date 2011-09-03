@@ -1,4 +1,3 @@
-require 'mathetes'
 require 'traited'
 require 'yaml'
 require 'pp'
