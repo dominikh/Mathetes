@@ -4,53 +4,41 @@
 
 # By Pistos - irc.freenode.net#mathetes
 
-module Mathetes; module Plugins
+module Cinch
+  module Plugins
+    class RussianRoulette
+      Reasons = [
+                 'You just shot yourself!',
+                 'Suicide is never the answer.',
+                 'If you wanted to leave, you could have just said so...',
+                 "Good thing these aren't real bullets...",
+                 "That's gotta hurt...",
+                ]
 
-  class RussianRoulette
-    REASONS = [
-        'You just shot yourself!',
-        'Suicide is never the answer.',
-        'If you wanted to leave, you could have just said so...',
-        "Good thing these aren't real bullets...",
-        "That's gotta hurt...",
-    ]
-    ALSO_BAN = true
-    BAN_TIME = 60 # seconds
+      include Cinch::Plugin
+      react_on :channel
 
-    def initialize( mathetes )
-      @mathetes = mathetes
-      @mathetes.hook_privmsg(
-        :regexp => /^!roul(ette)?\b/
-      ) do |message|
-        pull_trigger message
-      end
-    end
+      match(/roul(ette)?/)
+      def execute(m)
+        m.reply "*spin ..."
+        sleep 4
+        has_bullet = rand(6) == 0
 
-    def pull_trigger( message )
-      message.answer '*spin* ...'
-      sleep 4
-      has_bullet = ( rand( 6 ) == 0 )
-      if ! has_bullet
-        message.answer "-click-"
-      else
-        if ALSO_BAN
-          @mathetes.ban(
-            message.from,
-            message.channel,
-            BAN_TIME
-          )
+        if has_bullet
+          if config[:also_ban]
+            m.channel.ban m.user
+
+            timer(config[:ban_time] || 60, shots: 1) do
+              m.channel.unban m.user
+            end
+
+            m.channel.kick m.user, "{ *BANG* #{Reasons.sample} }"
+          end
+        else
+          m.reply "-click-"
         end
-
-        @mathetes.kick(
-          message.from,
-          message.channel,
-          '{ *BANG* ' +
-            REASONS[ rand( REASONS.size ) ] +
-          '}'
-        )
       end
     end
-
   end
+end
 
-end; end
