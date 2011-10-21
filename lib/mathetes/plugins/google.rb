@@ -1,58 +1,35 @@
 require 'cgi'
 require 'open-uri'
 
-module Mathetes; module Plugins
+module Cinch
+  module Plugins
+    class Google
+      include Cinch::Plugin
 
-  class Google
-
-    MAX_RESULTS = 5
-
-    def initialize( mathetes )
-      mathetes.hook_privmsg( :regexp => /^!g(oogle)?\b/ ) do |message|
-        args = message.text[ /^\S+\s+(.*)/, 1 ]
-        nick = message.from.nick
-
-        num_results = 1
-        args_array = args.split( /\s+/ )
-
-        if args_array.length < 1
-          message.answer "!google [number of results] <search terms>"
-          return
+      match(/g(?:google)? (?:(\d+) )?(.+)/)
+      def execute(m, num_results, search_term)
+        num_results ||= 1
+        if num_results > config[:max_results]
+          num_results = config[:max_results]
         end
 
-        if args_array[ 0 ].to_i.to_s == args_array[ 0 ]
-          # A number of results has been specified
-          num_results = args_array[ 0 ].to_i
-          if num_results > MAX_RESULTS
-            num_results = MAX_RESULTS
-          end
-          arg = args_array[ 1..-1 ].join( "+" )
-          unescaped_arg = args_array[ 1..-1 ].join( " " )
-        else
-          arg = args_array.join( "+" )
-          unescaped_arg = args_array.join( " " )
-        end
-
-        arg = CGI.escape( arg )
-
-        open( "http://www.google.com/search?q=#{ CGI.escape( args ) }&safe=active" ) do |html|
+        argument_string = CGI.escape(search_term)
+        open( "http://www.google.com/search?q=#{argument_string}&safe=active" ) do |html|
           counter = 0
           html.read.scan /<a href="?([^"]+)" class=l.*?>(.+?)<\/a>/m do |match|
             url, title = match
             title.gsub!( /<.+?>/, "" )
-            ua = unescaped_arg.gsub( /-?site:\S+/, '' ).strip
-            message.answer "[#{ua}]: #{url} - #{title}"
+            ua = search_term.gsub( /-?site:\S+/, '' ).strip
+            m.reply "[#{ua}]: #{url} - #{title}"
             counter += 1
             break  if counter >= num_results
           end
 
           if counter == 0
-            message.answer "(no results)"
+            m.reply "(no results)"
           end
         end
       end
     end
-
   end
-
-end; end
+end
