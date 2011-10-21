@@ -1,33 +1,29 @@
 require 'cgi'
 require 'open-uri'
-require 'mathetes/plugins/web-scrape'
+require 'mathetes/web_scrape'
 
-module Mathetes; module Plugins
+module Cinch
+  module Plugins
+    class Etymology
+      include Cinch::Plugin
 
-  class Etymology
-
-    def initialize( mathetes )
-      mathetes.hook_privmsg( :regexp => /^!etym(ology)?\b/ ) do |message|
-        terms = message.text[ /^\S+\s+(.*)/, 1 ]
-        arg = CGI.escape( terms )
-
+      match(/etym(?:ology)? (.+)/)
+      def execute(m, term)
+        arg = CGI.escape(term)
         hits = WebScrape.scrape(
-          "http://www.etymonline.com/index.php?term=#{ arg }",
-          /<dt(?: class="highlight")?>(.+?)<\/dd>/m,
-          arg
-        )
+                                "http://www.etymonline.com/index.php?term=#{ arg }",
+                                /<dt(?: class="highlight")?>(.+?)<\/dd>/m,
+                                arg
+                                )
 
         if hits.empty?
-          message.answer "[#{terms}] No results."
+          m.reply "[#{terms}] No results."
         else
           hits.each do |hit|
-            message.answer "[#{terms}] #{hit}"
+            m.reply "[#{terms}] #{hit}"
           end
         end
-
       end
     end
-
   end
-
-end; end
+end

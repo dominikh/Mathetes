@@ -1,7 +1,5 @@
-module Mathetes; module Plugins
-
+module Mathetes
   module WebScrape
-
     def self.scrape( search_url, regexp, search_term = "", max_results = 1 )
       hits = []
 
@@ -26,7 +24,5 @@ module Mathetes; module Plugins
 
       hits
     end
-
   end
-
-end; end
+end
