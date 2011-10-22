@@ -21,7 +21,7 @@ require "cinch/plugins/spell"
 require "cinch/plugins/time"
 require "cinch/plugins/translate"
 require "cinch/plugins/twitter"
-require "cinch/plugins/url_summary"
+require "cinch/plugins/url_summarizer"
 require "cinch/plugins/web_scrape"
 
 require 'yaml'
