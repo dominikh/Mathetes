@@ -5,12 +5,12 @@ require "cinch/plugins/converter"
 require "cinch/plugins/dictionary"
 require "cinch/plugins/down_for_me"
 require "cinch/plugins/etymology"
-require "cinch/plugins/github_hook"
+#require "cinch/plugins/github_hook"
 require "cinch/plugins/google_fight"
 require "cinch/plugins/google"
 require "cinch/plugins/identify"
 require "cinch/plugins/kicker"
-require "cinch/plugins/last_spoke"
+#require "cinch/plugins/last_spoke"
 require "cinch/plugins/memo"
 require "cinch/plugins/pun"
 require "cinch/plugins/rss"
@@ -22,13 +22,14 @@ require "cinch/plugins/time"
 require "cinch/plugins/translate"
 require "cinch/plugins/twitter"
 require "cinch/plugins/url_summarizer"
-require "cinch/plugins/web_scrape"
+require "cinch/plugins/ideone"
+require "mathetes/web_scrape"
 
 require 'yaml'
 
 Thread.abort_on_exception = true
 
-class Mathetes < Cinch::Bot
+class MathetesBot < Cinch::Bot
   def reset( load_conf = true )
     loggers.info "Resetting..."
 
@@ -42,7 +43,7 @@ class Mathetes < Cinch::Bot
   end
 end
 
-mathetes = Mathetes.new do
+mathetes = MathetesBot.new do
   configure do |c|
     c.load YAML.load_file 'mathetes-config.yaml'
   end
