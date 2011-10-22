@@ -5,12 +5,12 @@ module Cinch
     class Time
       include Cinch::Plugin
 
-      match(/time(?: (\w{1,3})([+-]\d{1,2})?)/)
+      match(/time(?: (\w{1,3})([+-]\d{1,2})?)?/)
       def execute(m, timezone, adjustment)
         timezone ||= config[:default_timezone]
-        adjustment = adjustment.to_i
+        adjustment = adjustment.to_i * 3600
 
-        time = Time.at(Time.now.utc + Time.zone_offset(timezone) + adjustment)
+        time = ::Time.at(::Time.now.utc + ::Time.zone_offset(timezone) + adjustment)
 
         timezone_string = timezone
         if adjustment > 0
