@@ -24,7 +24,6 @@ require "cinch/plugins/twitter"
 require "cinch/plugins/url_summary"
 require "cinch/plugins/web_scrape"
 
-require 'traited'
 require 'yaml'
 
 Thread.abort_on_exception =
