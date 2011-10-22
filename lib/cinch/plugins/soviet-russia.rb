@@ -5,103 +5,92 @@
 
 require 'russian-reversal'
 
-module Mathetes; module Plugins
+module Cinch
+  module Plugins
+    class SovietRussia
+      include Cinch::Plugin
 
-  class SovietRussia
-
-    BANG_COMMAND = '!sr'
-    DEFAULT_INTERVAL = 30 * 60  # seconds
-    # Add bot names to this list, if you like.
-    IGNORED = [ "", "*" ]
-
-    def channel_init( channel )
-      @channels.transaction do
-        @channels[channel] ||= {
-          :active => false,
-          :interval => DEFAULT_INTERVAL,
-          :last => 0,
-        }
-      end
-    end
-
-    def initialize( mathetes )
-      @channels = MuPStore.new( "soviet-russia.pstore" )
-
-      mathetes.hook_privmsg do |message|
-        handle_privmsg message
+      def channel_init( channel )
+        @channels.transaction do
+          @channels[channel] ||= {
+            :active => false,
+            :interval => config[:default_interval],
+            :last => 0,
+          }
+        end
       end
 
-      mathetes.hook_privmsg( :regexp => /^#{BANG_COMMAND}\b/ ) do |message|
-        nick = message.from.nick
-        break  if IGNORED.include?( nick )
+      def initialize(*args)
+        super
 
-        args = message.text[ /^\S+\s+(.*)/, 1 ]
-        break  if args.strip.empty?
-        args = args.split( /\s+/ )
-        channel = message.channel.name.downcase
-        channel_init( channel )
+        @channels = MuPStore.new( "soviet-russia.pstore" )
+      end
 
-        case args[ 0 ]
+      match(/sr ([\S])+(?: (.+))?/)
+      def execute(m, command, args)
+        return if config[:ignored].include?( m.user.nick )
+
+        args    = args.split(" ")
+        channel = m.channel.name.downcase
+
+        channel_init channel
+
+        case command
         when 'off'
           @channels.transaction do
             @channels[channel][:active] = false
           end
-          message.answer "Soviet Russia mode deactivated for #{channel}."
+          m.reply "Soviet Russia mode deactivated for #{channel}."
         when 'on'
           @channels.transaction do
             @channels[channel][:active] = true
           end
-          message.answer "Soviet Russia mode activated for #{channel}."
+          m.reply "Soviet Russia mode activated for #{channel}."
         when /^int/
-          int = ( args[1].to_i * 60 )
+          int = ( args[0].to_i * 60 )
           @channels.transaction do
             @channels[channel][:interval] = int
           end
-          message.answer "Soviet Russia interval for #{channel} set to #{ int / 60.0 } minutes."
+          m.reply "Soviet Russia interval for #{channel} set to #{ int / 60.0 } minutes."
         when 'test'
           begin
-            reversal = RussianReversal.reverse( args[1..-1].join(' ') )
+            reversal = RussianReversal.reverse( args.join(' ') )
             if reversal && ! reversal.strip.empty?
-              message.answer "#{nick}: HA!  In Soviet Russia, #{reversal} YOU!"
+              m.reply "#{m.user.nick}: HA!  In Soviet Russia, #{reversal} YOU!"
             else
-              message.answer "Stuff like that actually happens in Soviet Russia."
+              m.reply "Stuff like that actually happens in Soviet Russia."
             end
           rescue Exception => e
-            message.answer e.message
+            m.reply e.message
           end
         end
       end
     end
 
-    def handle_privmsg( message )
-      return  if message.channel.nil?
-      nick = message.from.nick
-      if ! IGNORED.include?( nick )
-        channel = message.channel.name.downcase
-        channel_init channel
-        @channels.transaction do
-          delta = Time.now.to_i - @channels[channel][:last]
-          if @channels[channel][:active] && delta > @channels[channel][:interval]
-            begin
-              reversal = RussianReversal.reverse( message.text )
-              if reversal && ! reversal.strip.empty?
-                message.answer "#{nick}: Ha!  In Soviet Russia, #{reversal} YOU!"
-                @channels[channel][:last] = Time.now.to_i
-              else
-                $stderr.puts %{No SR for "#{message}"}
-              end
-            rescue Exception => e
-              if e.message !~ /sentence has no linkages/
-                $stderr.puts e.message
-                $stderr.puts e.backtrace.join("\n\t")
-              end
+    listen_to :channel, method: :on_channel
+    def on_channel(m)
+      return if config[:ignored].include?(m.user.nick)
+      channel = m.channel.name.downcase
+      channel_init channel
+      @channels.transaction do
+        delta = Time.now.to_i - @channels[channel][:last]
+        if @channels[channel][:active] && delta > @channels[channel][:interval]
+          begin
+            reversal = RussianReversal.reverse( message.text )
+            if reversal && ! reversal.strip.empty?
+              m.reply "#{m.user.nick}: Ha!  In Soviet Russia, #{reversal} YOU!"
+              @channels[channel][:last] = Time.now.to_i
+            else
+              @bot.loggers.debug "No SR for \"#{message}\""
+            end
+          rescue Exception => e
+            if e.message !~ /sentence has no linkages/
+              @bot.loggers.exception(e)
             end
           end
         end
       end
     end
-
   end
-
-end; end
+end
 
