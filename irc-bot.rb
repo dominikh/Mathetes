@@ -26,22 +26,7 @@ require "cinch/plugins/web_scrape"
 
 require 'yaml'
 
-Thread.abort_on_exception =
-
-module Cinch
-  module Plugins
-    class RequestOpOnJoin
-      include Cinch::Plugin
-
-      listen_to :join
-      def listen(m)
-        return if m.user != @bot
-        return if ! config[:channels].include?(m.channel.name)
-        User("ChanServ").send "OP #{m.channel}"
-      end
-    end
-  end
-end
+Thread.abort_on_exception = true
 
 class Mathetes < Cinch::Bot
   def reset( load_conf = true )
