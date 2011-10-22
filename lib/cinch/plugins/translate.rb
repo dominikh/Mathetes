@@ -36,7 +36,7 @@ module Cinch
 
       match(/tr(?:ans(?:late)?)? ([a-zA-Z-]{2,5}) ([a-zA-Z-]{2,5}) (.+)/)
       def execute(m, src, dest, text)
-        if message.text =~ /^!tr\S* /
+        if m.message =~ /^!tr\S* /
           translation = Translate.translate( text, src, dest, @bot )
           if translation
             m.reply "[tr] #{translation}"
