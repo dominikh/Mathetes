@@ -15,6 +15,8 @@ require 'net/http'
 module Cinch
   module Plugins
     class URLSummarizer
+      include Cinch::Plugin
+
       class ByteLimitExceededException < Exception
       end
 
