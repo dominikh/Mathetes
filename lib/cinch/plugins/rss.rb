@@ -16,7 +16,7 @@ module Cinch
         @first = Hash.new { |hash,key| hash[ key ] = true }
 
         config[:feeds].each do |uri, data|
-          timer(data[:interval]) do
+          Timer(data[:interval]) do
             poll_feed(uri, data)
           end
         end
