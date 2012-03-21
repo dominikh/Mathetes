@@ -1,92 +1,67 @@
-require 'm4dbi'
+require "yaml"
 
-module Mathetes
+# TODO use the storage API when available
+module Cinch
   module Plugins
-    class MemoManager
+    class Memo
+      Memo = Struct.new(:message, :recipient, :sender, :time)
       include Cinch::Plugin
-
-      # Add bot names to this list, if you like.
-      # TODO put this into a config
-      IGNORED = [
-                 "",
-                 "*",
-                 "Gherkins",
-                 "Mathetes",
-                 "GeoBot",
-                 "scry",
-                ]
-
-      # TODO put this into a config
-      MAX_MEMOS_PER_PERSON = 20
-      # TODO put this into a config
-      PUBLIC_READING_THRESHOLD = 2
-
-      def initialize(*args)
-        super
-        # TODO config
-        @dbh = DBI.connect( "DBI:Pg:reby-memo:localhost", "memo", "memo" )
-      end
 
       match(/memo ([\S]+) (.+)/)
       listen_to :message, method: :on_message
       listen_to :join, method: :on_join
 
-      def execute(m, recipient, message)
-        if recipient =~ %r{^/(.*)/$}
-          recipient_regexp = Regexp.new $1
-          @dbh.do(
-                  "INSERT INTO memos ( sender, recipient_regexp, message ) VALUES ( ?, ?, ? )",
-                  m.user.nick,
-                  recipient_regexp.source,
-                  message
-                  )
-          m.reply "Memo recorded for /#{recipient_regexp.source}/.", true
+      def initialize(*args)
+        super
+        if File.exist?(config[:db])
+          @db = YAML.load_file(config[:db])
         else
-          if memos_for( recipient ).size >= MAX_MEMOS_PER_PERSON
-            m.reply "The inbox of #{recipient} is full."
-          else
-            @dbh.do(
-                    "INSERT INTO memos ( sender, recipient, message ) VALUES ( ?, ?, ? )",
-                    m.user.nick,
-                    recipient,
-                    message
-                    )
-            m.reply "Memo recorded for #{recipient}.", true
-          end
+          @db = {}
         end
       end
 
+      def execute(m, recipient, message)
+        if recipient =~ %r{^/(.*)/$}
+          recipient = Regexp.new(recipient[1..-2])
+          m.reply "Memo recorded for /#{recipient.source}/.", true
+        else
+          if memos_for(recipient).size >= config[:max_per_person]
+            m.reply "The inbox of #{recipient} is full."
+            return
+          end
+          m.reply "Memo recorded for #{recipient}.", true
+        end
+        memo = Memo.new(message, recipient, m.user.nick, m.time)
+        @db[recipient] ||= []
+        @db[recipient] << memo
+
+        save_db
+      end
+
       def on_message(m)
-        return  if IGNORED.include?( m.user.nick )
+        return  if config[:ignore].include?( m.user.nick )
 
         memos = memos_for( m.user.nick )
-        if memos.size <= PUBLIC_READING_THRESHOLD && m.channel?
+        if memos.size <= config[:public_reading_threshold] && m.channel?
           dest = m.channel
         else
           dest = m.user
         end
 
-        memos.each do |memo|
-          age = memo[ 'sent_age' ].gsub( /\.\d+$/, '' )
-          case age
-          when /^00:00:(\d+)/
-            age = "#{$1} seconds"
-          when /^00:(\d+):(\d+)/
-            age = "#{$1}m #{$2}s"
-          else
-            age.gsub( /^(.*)(\d+):(\d+):(\d+)/, "\\1 \\2h \\3m \\4s" )
-          end
-          dest.send "#{m.user.nick}: [#{age} ago] <#{memo['sender']}> #{memo['message']}"
-
-          @dbh.do(
-                  "UPDATE memos SET time_told = NOW() WHERE id = ?",
-                  memo[ 'id' ]
-                  )
+        memos.values.flatten.each do |memo|
+          age = humanize_seconds((::Time.now - memo.time).round)
+          dest.send "#{m.user.nick}: [#{age} ago] <#{memo.sender}> #{memo.message}"
         end
+
+        memos.keys.each do |key|
+          @db.delete(key)
+        end
+
+        save_db
       end
 
       def on_join(m)
-        return  if IGNORED.include?( m.user.nick )
+        return  if config[:ignore].include?( m.user.nick )
 
         memos = memos_for( m.user.nick )
         if memos.size > 0
@@ -94,24 +69,38 @@ module Mathetes
         end
       end
 
-      def memos_for( recipient )
-        @dbh.select_all(
-                        %{
-          SELECT
-            m.*,
-            age( NOW(), m.time_sent )::TEXT AS sent_age
-          FROM
-            memos m
-          WHERE
-            (
-              lower( m.recipient ) = lower( ? )
-              OR ? ~* m.recipient_regexp
-            )
-            AND m.time_told IS NULL
-        },
-                        recipient,
-                        recipient
-                        )
+      private
+      # @param [String] recipient
+      # @return [Hash{String, Regexp => Array<Memo>}]
+      def memos_for(recipient)
+        @db.select { |key, value|
+          case key
+          when Regexp
+            recipient =~ key
+          else
+            recipient == key
+          end
+        }
+      end
+
+      # @param [Integer] secs
+      # @return [String]
+      def humanize_seconds(secs)
+        [[60, "s"], [60, "m"], [24, "h"], [1000, "d"]].map{ |count, name|
+          if secs > 0
+            secs, n = secs.divmod(count)
+            "#{n.to_i}#{name}"
+          end
+        }.compact.reverse.join(' ')
+      end
+
+      def save_db
+        synchronize(:memo_save_db) do
+          File.open(config[:db], "w") do |f|
+            f.truncate(0)
+            f.write @db.to_yaml
+          end
+        end
       end
     end
   end
