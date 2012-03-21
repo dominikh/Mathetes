@@ -16,7 +16,7 @@ module Cinch
                 ]
 
       include Cinch::Plugin
-      react_on :channel
+      set :react_on, :channel
 
       match(/roul(ette)?/)
       def execute(m)
@@ -28,7 +28,7 @@ module Cinch
           if config[:also_ban]
             m.channel.ban m.user
 
-            timer(config[:ban_time] || 60, shots: 1) do
+            Timer(config[:ban_time] || 60, shots: 1) do
               m.channel.unban m.user
             end
 
