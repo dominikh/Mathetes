@@ -54,7 +54,7 @@ module Cinch
                 if url.length > 28
                   url = zepto_url( item.link )
                 end
-                alert = "[\00300rss\003] #{author}#{item.title} - #{url}".gsub( /\n/, '' )
+                alert = "[#{Format(:bold, "rss")}] #{author}#{item.title} - #{url}".gsub( /\n/, '' )
               end
               Channel(channel).send alert
             end
