@@ -77,13 +77,14 @@ module Cinch
         text = clean_text( tweet.text )
         alert = "[#{Format(:bold, "twitter")}] <#{src}> #{text}"
         channels = config[:channels][src]
+        return unless channels
         channels.each do |channel|
           if ! @seen[ channel ].include?( tweet_id )
             Target(channel).safe_send alert
             @seen[ channel ] << tweet_id
             lang, tr = translate( text )
             if lang && tr
-              Target(channel).send "[\00300twitter\003] (#{lang}) <#{src}> #{tr}"
+              Target(channel).send "[#{Format(:bold, "twitter")}] (#{lang}) <#{src}> #{tr}"
             end
           end
         end
@@ -98,14 +99,14 @@ module Cinch
           return
         end
 
-        alert = "[\00300twitter\003] [#{search_term[0..15]}] <#{src}> #{text}"
+        alert = "[#{Format(:bold, "twitter")}] [#{search_term[0..15]}] <#{src}> #{text}"
         channels.each do |channel|
           if ! @seen[ channel ].include?( tweet_id )
             Target(channel).send alert
             @seen[ channel ] << tweet_id
             lang, tr = translate( text )
             if lang && tr
-              Target(channel).send "[\00300twitter\003] (#{lang}) <#{src}> #{tr}"
+              Target(channel).send "[#{Format(:bold, "twitter")}] (#{lang}) <#{src}> #{tr}"
             end
           end
         end
