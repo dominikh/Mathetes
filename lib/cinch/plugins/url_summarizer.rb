@@ -6,11 +6,11 @@
 # $KCODE = 'u'
 
 require 'cgi'
-require 'open-uri'
 require 'json'
 require 'nokogiri'
 require 'timeout'
-require 'net/http'
+require 'open-uri'
+require 'json'
 
 module Cinch
   module Plugins
@@ -88,7 +88,7 @@ module Cinch
           summary = summary.strip.gsub( /\s+/, ' ' )
           if summary.length > 10
             summary = summary.split( /\n/ )[ 0 ]
-            "[\00300URL\003] #{summary[ 0...160 ]}#{summary.size > 159 ? '[...]' : ''}"
+            "[#{Format(:bold, "URL")}] #{summary[ 0...160 ]}#{summary.size > 159 ? '[...]' : ''}"
           end
         end
       rescue Timeout::Error
@@ -106,13 +106,10 @@ module Cinch
 
       listen_to :channel
       def listen(m)
-        return  if m.channel && config[:channel_blacklist].include?( m.channel.name )
+        return if m.channel && config[:channel_blacklist].include?(m.channel.name)
+        return if m.user.nil? || m.user.authname.nil?
 
-        m.user.whois
-        return if m.user.authname.nil?
-
-        speech = m.message
-        case speech
+        case m.message
         when %r{http://pastie},
           %r{http://pastebin},
           %r{http://github\.com/.*/blob},
@@ -121,26 +118,25 @@ module Cinch
           %r{http://\d+\.\d+\.\d+\.\d+}
           # Blacklist; swallow and discard
         when %r{twitter\.com/(?:#!/)?\w+/status(?:es)?/(\d+)}
-          open( "http://twitter.com/statuses/show/#{$1.to_i}.json" ) do |http|
+          open( "https://twitter.com/statuses/show/#{$1.to_i}.json", :ssl_verify_mode => OpenSSL::SSL::VERIFY_NONE ) do |http|
             json = http.read
             tweet = JSON.parse( json )
             escaped_text = CGI.unescapeHTML( tweet[ 'text' ].gsub( '&quot;', '"' ).gsub( '&amp;', '&' ) ).gsub( /\s/, ' ' )
-            m.reply "[\00300twitter\003] <#{tweet[ 'user' ][ 'screen_name' ]}> #{escaped_text}"
+            m.reply "[#{Format(:bold, "twitter")}] <#{tweet[ 'user' ][ 'screen_name' ]}> #{escaped_text}"
           end
-        when %r{(http://github.com/.+?/(.+?)/commit/.+)}
-          doc            = Nokogiri::HTML( open( $1 ) )
+        when %r{(https?://github.com/.+?/(.+?)/commit/.+)}
+          commit = JSON.load(open($1 + ".json", :ssl_verify_mode => OpenSSL::SSL::VERIFY_NONE))["commit"]
 
           project        = $2
-          commit_message = doc.css( 'div.human div.message pre' )[ 0 ].content.delete("\n")
-          author         = doc.css( 'div.human div.name a')[ 0 ].content
+          commit_message = Utilities::String.filter_string(commit["message"])
+          author         = Utilities::String.filter_string(commit["author"]["name"])
 
           number_files            = {}
-          number_files[:modified] = doc.css( '#toc td.status.modified' ).size
-          number_files[:added]    = doc.css( '#toc td.status.added'    ).size
-          number_files[:removed]  = doc.css( '#toc td.status.removed'  ).size
-          number_files[:renamed]  = doc.css( '#toc td.status.renamed'  ).size
+          [:modified, :added, :removed, :renamed].each do |field|
+            number_files[field] = (commit[field.to_s] || []).size
+          end
 
-          s = "[\00300github\003] [%s] <%s> %s {files +%s/-%s/~%s/mv%s}" %
+          s = "[#{Format(:bold, "github")}] [%s] <%s> %s {files +%s/-%s/~%s/mv%s}" %
             [project, author, commit_message, *number_files.values_at(:added, :removed, :modified, :renamed)]
 
           m.reply s
