@@ -1,4 +1,4 @@
-require 'mutex-pstore'
+require "pstore"
 
 module Cinch
   module Plugins
@@ -8,8 +8,8 @@ module Cinch
       def initialize(*args)
         super
 
-        @last_spoke = MuPStore.new( "lastspoke.pstore" )
-        @spoke_start = MuPStore.new( "lastspoke-start.pstore" )
+        @last_spoke = PStore.new( "lastspoke.pstore" )
+        @spoke_start = PStore.new( "lastspoke-start.pstore" )
         @spoke_start.transaction { @spoke_start['time'] ||= Time.now }
       end
 

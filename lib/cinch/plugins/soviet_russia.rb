@@ -4,6 +4,7 @@
 # By Pistos - irc.freenode.net#mathetes
 
 require 'russian-reversal'
+require "pstore"
 raise "This plugin is currently broken."
 
 module Cinch
@@ -24,7 +25,7 @@ module Cinch
       def initialize(*args)
         super
 
-        @channels = MuPStore.new( "soviet-russia.pstore" )
+        @channels = PStore.new( "soviet-russia.pstore" )
       end
 
       match(/sr (\S+)(?: (.+))?/)

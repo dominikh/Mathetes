@@ -1,4 +1,4 @@
-require 'mutex-pstore'
+require 'pstore'
 
 module Cinch
   module Plugins
@@ -7,7 +7,7 @@ module Cinch
 
       def initialize(*args)
         super
-        @h = MuPStore.new( "key-value.pstore" )
+        @h = PStore.new( "key-value.pstore" )
       end
 
       help "Usage: !i key = value     !i key"
