@@ -14,11 +14,7 @@ module Cinch
 
       def initialize(*args)
         super
-        if File.exist?(config[:db])
-          @db = YAML.load_file(config[:db])
-        else
-          @db = {}
-        end
+        @db = PStore.new('memos.pstore')
       end
 
       def execute(m, recipient, message)
@@ -33,10 +29,10 @@ module Cinch
           m.reply "Memo recorded for #{recipient}.", true
         end
         memo = Memo.new(message, recipient, m.user.nick, m.time)
-        @db[recipient] ||= []
-        @db[recipient] << memo
-
-        save_db
+        @db.transaction do
+          @db[recipient] ||= []
+          @db[recipient] << memo
+        end
       end
 
       def on_message(m)
@@ -54,8 +50,10 @@ module Cinch
           dest.send "#{m.user.nick}: [#{age} ago] <#{memo.sender}> #{memo.message}"
         end
 
-        memos.keys.each do |key|
-          @db.delete(key)
+        @db.transaction do
+          memos.keys.each do |key|
+            @db.delete(key)
+          end
         end
 
         save_db
@@ -93,15 +91,6 @@ module Cinch
             "#{n.to_i}#{name}"
           end
         }.compact.reverse.join(' ')
-      end
-
-      def save_db
-        synchronize(:memo_save_db) do
-          File.open(config[:db], "w") do |f|
-            f.truncate(0)
-            f.write @db.to_yaml
-          end
-        end
       end
     end
   end
