@@ -96,7 +96,7 @@ module Cinch
         src = tweet[ 'from_user' ]
         text = clean_text( tweet[ 'text' ] )
         if config[:filters].find { |f| f =~ text }
-          @bot.loggers.debug "[twitter] Filtered: #{text}"
+          debug "Filtered: #{text}"
           return
         end
 
