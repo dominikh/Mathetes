@@ -15,9 +15,11 @@ module Cinch
 
       listen_to :channel
       def listen(m)
+        return unless m.user
+
         nick = m.user.nick
         speech = m.message
-        return unless config[:channels].find { |c| c.downcase == m.channel.name.downcase }
+        return unless config[:channels].any? { |c| Channel(c) == m.channel }
 
         config[:watchlist].each do |watch_nick, watchlist|
           next unless watch_nick === nick
