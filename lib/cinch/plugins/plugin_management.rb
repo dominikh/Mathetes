@@ -49,7 +49,26 @@ module Cinch
           @bot.plugins.unregister_plugin(p)
         end
 
-        Cinch::Plugins.__send__(:remove_const, plugin)
+        ## FIXME not doing this at the moment because it'll break
+        ## plugin options. This means, however, that reloading a
+        ## plugin is relatively dirty: old methods will not be removed
+        ## but only overwritten by new ones. You will also not be able
+        ## to change a classes superclass this way.
+        # Cinch::Plugins.__send__(:remove_const, plugin)
+
+        # Because we're not completely removing the plugin class,
+        # reset everything to the starting values.
+        plugin_class.hooks.clear
+        plugin_class.matchers.clear
+        plugin_class.listeners.clear
+        plugin_class.timers.clear
+        plugin_class.ctcps.clear
+        plugin_class.react_on = :message
+        plugin_class.plugin_name = nil
+        plugin_class.help = nil
+        plugin_class.prefix = nil
+        plugin_class.suffix = nil
+        plugin_class.required_options.clear
 
         m.reply "Successfully unloaded #{plugin}"
       end
