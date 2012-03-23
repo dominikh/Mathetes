@@ -7,7 +7,7 @@ module Cinch
       include Cinch::Plugin
       enable_acl
 
-      match(/d(?:dict)? +(.+)/)
+      match(/d(?:ict)? (.+)/)
       def execute(m, arg)
         catch :done do
           doc = Nokogiri::HTML(
