@@ -147,6 +147,10 @@ mathetes = MathetesBot.new do
     acl.allow(:authname, Cinch::Plugins::PluginManagement, "Pistos")
     acl.allow(:authname, Cinch::Plugins::PluginManagement, "DominikH")
 
+    # Eval
+    acl.set_default(:channel, Cinch::Plugins::Eval, :allow)
+    acl.set_default(:authname, Cinch::Plugins::Eval, :disallow)
+    acl.allow(:authname, Cinch::Plugins::Eval, "DominikH")
 
     c.shared[:acl] = acl
   end
