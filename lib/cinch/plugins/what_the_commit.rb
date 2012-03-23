@@ -10,7 +10,7 @@ module Cinch
       match("commit")
       def execute(m)
         open 'http://whatthecommit.com/' do |io|
-          m.reply Nokogiri::HTML(io).css('#content > p').text.strip
+          m.safe_reply Nokogiri::HTML(io).css('#content > p').first.text.strip
         end
       end
     end
