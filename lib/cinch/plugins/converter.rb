@@ -17,14 +17,18 @@ module Cinch
 
       match(/(?:conv(?:ert)|calc) +(.*)$/)
       def execute(m, arg)
-        open( "http://www.google.com/search?q=#{ arg }" ) do |html|
+        # FIXME currency conversions do not work
+        arg = CGI.escape(arg)
+        open("http://www.google.com/search?q=#{arg}") do |html|
           answered = false
-          html.read.scan %r{<h2.*style="font-size:138%"><b>(.+?)</b></h2>}m do |result|
+          html.read.scan(/<h2.*style="font-size:138%">\s*(.+?)\s*<\/h2>/m) do |result|
             stripped_result = CGI.unescapeHTML( result[ 0 ] )
-            stripped_result = stripped_result.gsub( /<sup>(.+?)<\/sup>/, "^(\\1)" )
-            stripped_result = stripped_result.gsub( /<font size=-2> <\/font>/, "" )
-            stripped_result = stripped_result.gsub( /<[^>]+>/, "" )
-            stripped_result = stripped_result.gsub( /&times;/, "x" )
+            stripped_result.gsub!(/<sup>(.+?)<\/sup>/, "^(\\1)")
+            stripped_result.gsub!(/<font size=-2> <\/font>/, "")
+            stripped_result.gsub!(/<[^>]+>/, "")
+            stripped_result.gsub!(/&times;/, "x")
+            stripped_result.delete("\n")
+            stripped_result.gsub!(/\s+/, " ")
             m.reply stripped_result
             answered = true
             break
