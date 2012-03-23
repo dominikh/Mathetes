@@ -128,7 +128,7 @@ end
 
 mathetes = MathetesBot.new do
   configure do |c|
-    c.load YAML.load_file 'mathetes-config.yaml'
+    c.load YAML.load_file 'config.yaml'
 
     acl = Cinch::Extensions::ACL.new
     # global defaults
