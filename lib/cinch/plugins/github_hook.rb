@@ -105,7 +105,7 @@ module Cinch
         repo = hash['repository']['name']
         repos = PStore.new('github-repos.pstore')
         channels = nil
-        repos.transaction { channels = repos[repo] }
+        repos.transaction { channels = repos[repo] || [] }
         channels.map! {|c| Channel(c)}
 
 
