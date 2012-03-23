@@ -11,7 +11,7 @@ module Cinch
       match(/(?:up|down)\?? +(.+)/)
       def execute(m, site)
         doc = Nokogiri::HTML( open( "http://www.downforeveryoneorjustme.com/#{site}" ) )
-        m.reply "#{message.from.nick}: [#{site}] " + doc.at( 'div#container' ).children.select{ |e| e.text? }.join( ' ' ).gsub( /\s+/, ' ' ).strip
+        m.reply "[#{site}] " + doc.at( 'div#container' ).children.select{ |e| e.text? }.join( ' ' ).gsub( /\s+/, ' ' ).strip, true
       end
     end
   end
