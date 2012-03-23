@@ -15,7 +15,7 @@ module Cinch
           retval = "That's not a real word!  :P"
         else
           word.gsub!( /[^a-zA-Z'-]/, '' )
-          aspell = `echo '#{word.gsub("'", "'\\\\''")}' | aspell -d '#{language}' -a --sug-mode=bad-spellers`
+          aspell = `echo '#{word.gsub("'", "'\\\\''")}' | aspell -d '#{lang}' -a --sug-mode=bad-spellers`
 
           list = aspell.split( ':' )
           result = list[ 0 ]
