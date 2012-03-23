@@ -66,7 +66,6 @@ module Cinch
           m.reply "Could not set plugin option for #{plugin} because no matching class was found."
           return
         end
-
         @bot.config.plugins.options[const][option.to_sym] = eval(value)
       end
     end
