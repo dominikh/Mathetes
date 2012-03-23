@@ -37,7 +37,7 @@ require "cinch/plugins/url_summarizer"
 require "cinch/plugins/ideone"
 require "cinch/plugins/plugin_management"
 require "cinch/plugins/haiku"
-require "cinch/plugins/identify"
+# require "cinch/plugins/identify"
 require "mathetes/web_scrape"
 
 require 'yaml'
