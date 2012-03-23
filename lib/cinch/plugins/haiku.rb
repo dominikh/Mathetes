@@ -5,6 +5,7 @@ module Cinch
   module Plugins
     class Haiku
       include Cinch::Plugin
+      enable_acl
 
       match "haiku"
       def execute(m)

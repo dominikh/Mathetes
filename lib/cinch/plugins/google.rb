@@ -5,6 +5,7 @@ module Cinch
   module Plugins
     class Google
       include Cinch::Plugin
+      enable_acl
 
       match(/g(?:google)? (?:(\d+) )?(.+)/)
       def execute(m, num_results, search_term)

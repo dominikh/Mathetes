@@ -3,6 +3,7 @@ module Cinch
     class Spell
       ValidLanguages = %w[en de fr pt es it]
       include Cinch::Plugin
+      enable_acl
 
       match(/spell (?:([\S]+) )?(.+)/)
       def execute(m, lang, word)

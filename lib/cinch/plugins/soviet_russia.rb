@@ -11,6 +11,7 @@ module Cinch
   module Plugins
     class SovietRussia
       include Cinch::Plugin
+      enable_acl
 
       def channel_init( channel )
         @channels.transaction do

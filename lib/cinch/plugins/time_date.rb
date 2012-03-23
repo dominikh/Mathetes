@@ -4,6 +4,7 @@ module Cinch
   module Plugins
     class TimeDate
       include Cinch::Plugin
+      enable_acl
 
       match(/time(?: (\w{1,3})([+-]\d{1,2})?)?/)
       def execute(m, timezone, adjustment)

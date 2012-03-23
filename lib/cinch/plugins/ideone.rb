@@ -4,6 +4,7 @@ module Cinch
   module Plugins
     class Ideone
       include Cinch::Plugin
+      enable_acl
 
       match(/(ruby|rb|rbp|python|py|perl|pl|php) (.+)/)
       def execute(m, lang, code)

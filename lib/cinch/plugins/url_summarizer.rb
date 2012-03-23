@@ -16,6 +16,7 @@ module Cinch
   module Plugins
     class URLSummarizer
       include Cinch::Plugin
+      enable_acl
 
       class ByteLimitExceededException < Exception
       end

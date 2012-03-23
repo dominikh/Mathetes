@@ -6,6 +6,7 @@ module Cinch
   module Plugins
     class DownForMe
       include Cinch::Plugin
+      enable_acl
 
       match(/(?:up|down)\?? +(.+)/)
       def execute(m, site)

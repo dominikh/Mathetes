@@ -16,6 +16,7 @@ module Cinch
                 ]
 
       include Cinch::Plugin
+      enable_acl
       set :react_on, :channel
 
       match(/roul(ette)?/)

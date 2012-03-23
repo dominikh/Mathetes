@@ -6,6 +6,7 @@ module Cinch
   module Plugins
     class GoogleFight
       include Cinch::Plugin
+      enable_acl
 
       GOOGLEFIGHT_VERBS = [
                            [ 1000.0, "completely DEMOLISHES" ],

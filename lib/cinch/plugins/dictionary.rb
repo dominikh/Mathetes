@@ -5,6 +5,7 @@ module Cinch
   module Plugins
     class Dictionary
       include Cinch::Plugin
+      enable_acl
 
       match(/d(?:dict)? +(.+)/)
       def execute(m, arg)

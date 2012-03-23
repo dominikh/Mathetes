@@ -6,6 +6,7 @@ module Cinch
     class Memo
       Memo = Struct.new(:message, :recipient, :sender, :time)
       include Cinch::Plugin
+      enable_acl
 
       match(/memo ([\S]+) (.+)/)
       listen_to :message, method: :on_message

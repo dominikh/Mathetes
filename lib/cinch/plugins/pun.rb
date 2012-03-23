@@ -5,6 +5,7 @@ module Cinch
   module Plugins
     class Pun
       include Cinch::Plugin
+      enable_acl
 
       match("pun")
       def execute(m)

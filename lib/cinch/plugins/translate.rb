@@ -6,6 +6,7 @@ module Cinch
   module Plugins
     class Translate
       include Cinch::Plugin
+      enable_acl
 
       # @return The two-letter language code of the language
       def self.detect( s, bot )

@@ -11,6 +11,7 @@ module Cinch
   module Plugins
     class Kicker
       include Cinch::Plugin
+      enable_acl
 
       listen_to :channel
       def listen(m)

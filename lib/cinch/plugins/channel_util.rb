@@ -2,6 +2,7 @@ module Cinch
   module Plugins
     class ChannelUtil
       include Cinch::Plugin
+      enable_acl
 
       match("op", method: :op)
       match(/join (#[A-Z0-9_-]+)/i, method: :join)
@@ -14,18 +15,11 @@ module Cinch
       end
 
       def join(m, channel)
-        return  if ! admin?( m.user )
         Channel(channel).join
       end
 
       def part(m, channel)
-        return  if ! admin?( m.user )
         Channel(channel).part
-      end
-
-      private
-      def admin?(user)
-        config[:admins].include?( user.nick )
       end
     end
   end

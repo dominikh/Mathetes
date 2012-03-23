@@ -6,6 +6,7 @@ module Cinch
   module Plugins
     class Etymology
       include Cinch::Plugin
+      enable_acl
 
       match(/etym(?:ology)? (.+)/)
       def execute(m, term)

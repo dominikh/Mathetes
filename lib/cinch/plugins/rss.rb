@@ -8,6 +8,7 @@ module Cinch
   module Plugins
     class RSS
       include Cinch::Plugin
+      enable_acl
 
       def initialize(*args)
         super

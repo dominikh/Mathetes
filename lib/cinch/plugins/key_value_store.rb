@@ -4,6 +4,7 @@ module Cinch
   module Plugins
     class KeyValueStore
       include Cinch::Plugin
+      enable_acl
 
       def initialize(*args)
         super

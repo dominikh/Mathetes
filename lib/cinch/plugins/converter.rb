@@ -13,6 +13,7 @@ module Cinch
   module Plugins
     class Converter
       include Cinch::Plugin
+      enable_acl
 
       match(/(?:conv(?:ert)|calc) +(.*)$/)
       def execute(m, arg)

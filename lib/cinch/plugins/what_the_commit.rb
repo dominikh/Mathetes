@@ -5,6 +5,7 @@ module Cinch
   module Plugins
     class WhatTheCommit
       include Cinch::Plugin
+      enable_acl
 
       match("commit")
       def execute(m)

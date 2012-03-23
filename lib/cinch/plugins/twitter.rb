@@ -12,6 +12,7 @@ module Cinch
   module Plugins
     class Twitter
       include Cinch::Plugin
+      enable_acl
 
       def initialize(*args)
         super
