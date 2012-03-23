@@ -54,6 +54,8 @@ module Cinch
       end
 
       def listen(m)
+        return unless m.user
+
         nick = m.user.nick
         @last_spoke.transaction do
           @last_spoke[nick] = [Time.now, m.channel.name, m.message]
