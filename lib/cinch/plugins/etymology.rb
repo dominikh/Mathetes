@@ -1,6 +1,6 @@
 require 'cgi'
 require 'open-uri'
-require 'mathetes/web_scrape'
+require "nokogiri"
 
 module Cinch
   module Plugins
@@ -10,20 +10,11 @@ module Cinch
 
       match(/etym(?:ology)? (.+)/)
       def execute(m, term)
-        # FIXME this somehow prints inspected arrays...
         arg = CGI.escape(term)
-        hits = Mathetes::WebScrape.scrape(
-                                "http://www.etymonline.com/index.php?term=#{ arg }",
-                                /<dt(?: class="highlight")?>(.+?)<\/dd>/m,
-                                arg
-                                )
-
-        if hits.empty?
-          m.reply "[#{term}] No results."
-        else
-          hits.each do |hit|
-            m.reply "[#{term}] #{hit}"
-          end
+        code = open("http://www.etymonline.com/index.php?term=#{arg}").read
+        code.scan(/<dt(?: class="highlight")?>(.+?)<\/dd>/m) do |match|
+          text = Nokogiri::HTML(match.first).text
+          m.safe_reply "[#{term}] #{text}"
         end
       end
     end
