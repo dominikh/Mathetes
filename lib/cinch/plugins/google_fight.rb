@@ -5,6 +5,7 @@ require 'open-uri'
 module Cinch
   module Plugins
     class GoogleFight
+      # FIXME doesn't work with google's markup
       include Cinch::Plugin
       enable_acl
 
@@ -19,7 +20,7 @@ module Cinch
                            [ 1.0, "barely beats" ],
                           ]
 
-      match(/(?:googlefight|gf) ([\S])+ (?:versus|v(?:s\.)?) ([\S]+)/)
+      match(/(?:googlefight|gf) (\S+) (?:versus|vs?\.?) (\S+)/)
       def execute(m, person1, person2)
         count1 = google_count(person1)
         count2 = google_count(person2)

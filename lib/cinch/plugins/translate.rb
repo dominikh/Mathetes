@@ -5,6 +5,7 @@ require 'json'
 module Cinch
   module Plugins
     class Translate
+      # FIXME doesn't work
       include Cinch::Plugin
       enable_acl
 

@@ -4,10 +4,11 @@ require 'open-uri'
 module Cinch
   module Plugins
     class Google
+      # FIXME doesn't work with google's markup
       include Cinch::Plugin
       enable_acl
 
-      match(/g(?:google)? (?:(\d+) )?(.+)/)
+      match(/g(?:oogle)? (?:(\d+) )?(.+)/)
       def execute(m, num_results, search_term)
         num_results ||= 1
         if num_results > config[:max_results]

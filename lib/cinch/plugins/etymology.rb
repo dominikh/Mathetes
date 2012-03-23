@@ -10,18 +10,19 @@ module Cinch
 
       match(/etym(?:ology)? (.+)/)
       def execute(m, term)
+        # FIXME this somehow prints inspected arrays...
         arg = CGI.escape(term)
-        hits = WebScrape.scrape(
+        hits = Mathetes::WebScrape.scrape(
                                 "http://www.etymonline.com/index.php?term=#{ arg }",
                                 /<dt(?: class="highlight")?>(.+?)<\/dd>/m,
                                 arg
                                 )
 
         if hits.empty?
-          m.reply "[#{terms}] No results."
+          m.reply "[#{term}] No results."
         else
           hits.each do |hit|
-            m.reply "[#{terms}] #{hit}"
+            m.reply "[#{term}] #{hit}"
           end
         end
       end

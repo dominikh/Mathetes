@@ -3,6 +3,7 @@ require 'ideone'
 module Cinch
   module Plugins
     class Ideone
+      # FIXME always returns nil
       include Cinch::Plugin
       enable_acl
 
@@ -35,7 +36,7 @@ module Cinch
           end
           m.reply "[code] #{stdout}"
         rescue ::Ideone::IdeoneError => e
-          m.reply "[code] #{e.message}"
+          m.reply "[code] Error: #{e.message}"
         end
       end
     end
