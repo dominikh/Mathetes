@@ -1,5 +1,5 @@
 require 'cgi'
-require 'open-uri'
+require "json"
 
 module Cinch
   module Plugins
@@ -10,25 +10,23 @@ module Cinch
 
       match(/g(?:oogle)? (?:(\d+) )?(.+)/)
       def execute(m, num_results, search_term)
-        num_results ||= 1
-        if num_results > config[:max_results]
+        num_results = (num_results && num_results.to_i) || 1
+        if num_results.to_i > config[:max_results]
           num_results = config[:max_results]
         end
 
         argument_string = CGI.escape(search_term)
-        open( "http://www.google.com/search?q=#{argument_string}&safe=active" ) do |html|
-          counter = 0
-          html.read.scan /<a href="?([^"]+)" class=l.*?>(.+?)<\/a>/m do |match|
-            url, title = match
-            title.gsub!( /<.+?>/, "" )
-            ua = search_term.gsub( /-?site:\S+/, '' ).strip
-            m.reply "[#{ua}]: #{url} - #{title}"
-            counter += 1
-            break  if counter >= num_results
-          end
+        open("http://ajax.googleapis.com/ajax/services/search/web?v=1.0&q=#{argument_string}") do |http|
+          json = JSON.parse(http.read)
+          results = json["responseData"]["results"]
+          results = results.select {|result| result["GsearchResultClass"] == "GwebSearch"}[0, num_results]
 
-          if counter == 0
+          if results.empty?
             m.reply "(no results)"
+          else
+            results.each do |result|
+              m.safe_reply "[%s] %s - %s" % [search_term, result["url"], result["titleNoFormatting"]]
+            end
           end
         end
       end
