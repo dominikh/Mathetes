@@ -16,6 +16,9 @@ module Cinch
         super
         if File.exist?(config[:db])
           @db = YAML.load_file(config[:db])
+          if !@db.is_a?(Hash)
+            @db = {}
+          end
         else
           @db = {}
         end
