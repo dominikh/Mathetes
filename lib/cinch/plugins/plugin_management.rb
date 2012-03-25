@@ -21,7 +21,7 @@ module Cinch
 
         begin
           load(file_name)
-        rescue
+        rescue Exception
           m.reply "Could not load #{plugin}."
           raise
         end
@@ -86,6 +86,8 @@ module Cinch
           return
         end
         @bot.config.plugins.options[const][option.to_sym] = eval(value)
+
+        m.reply "Successfuly set option."
       end
     end
   end
