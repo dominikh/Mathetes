@@ -115,7 +115,7 @@ module Cinch
           # Announce each individual commit
           commits.each do |cdata|
             author  = cdata['author']['name']
-            message = cdata['message'].gsub(/\s+/, ' ')[0..384]
+            message = cdata['message'].split("\n").first.gsub(/\s+/, ' ')[0..300]
             url     = cdata['url']
             # FIXME escape strings
             text = "[#{Format(:bold, "github")}] [#{Format(:bold, repo)}] <#{Format(:orange, author)}> #{message} #{url}"
