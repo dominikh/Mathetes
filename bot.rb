@@ -41,8 +41,6 @@ require "cinch/plugins/eval"
 
 require 'yaml'
 
-Thread.abort_on_exception = true
-
 module Cinch
   module Extensions
     class ACL
