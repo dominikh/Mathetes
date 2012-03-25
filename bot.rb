@@ -127,6 +127,8 @@ mathetes = MathetesBot.new do
   configure do |c|
     c.load YAML.load_file 'config.yaml'
 
+    Cinch::Plugins::Haiku.enable_acl
+
     acl = Cinch::Extensions::ACL.new
     # global defaults
     acl.set_default(:channel, nil, :allow)
