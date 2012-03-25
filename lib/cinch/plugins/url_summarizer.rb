@@ -22,9 +22,9 @@ module Cinch
       def initialize(*args)
         super
 
-        @agent                  = Mechanize.new
-        @agent.user_agent_alias = "Linux Mozilla"
-        @agent.max_history      = 0
+        @agent                          = Mechanize.new
+        @agent.user_agent_alias         = "Linux Mozilla"
+        @agent.max_history              = 0
       end
 
       # class ByteLimitExceededException < Exception
@@ -114,13 +114,18 @@ module Cinch
       #   end
       # end
 
-      listen_to :channel
+      listen_to :message
       def listen(m)
         return if m.channel && config[:channel_blacklist].include?(m.channel.name)
         return if m.user.nil? || m.user.authname.nil?
 
         URI.extract(m.message, ["http", "https"]).each do |link|
           uri = URI.parse(link)
+          head = @agent.head(link)
+          if !["text/html", "application/xhtml+xml"].include?(head["content-type"]) || head["content-length"].to_i > 200000
+            next
+          end
+
           page = @agent.get(link)
           title = page.title.gsub(/\s+/, " ").delete("\n")
           case uri.host
