@@ -17,7 +17,7 @@ end
 require "cinch/plugins/channel_util"
 require "cinch/plugins/converter"
 require "cinch/plugins/dictionary"
-require "cinch/plugins/down_for_me"
+require "cinch/plugins/downforeveryone"
 require "cinch/plugins/etymology"
 require "cinch/plugins/github_hook"
 require "cinch/plugins/google_fight"
