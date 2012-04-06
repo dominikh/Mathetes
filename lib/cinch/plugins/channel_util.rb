@@ -5,8 +5,8 @@ module Cinch
       enable_acl
 
       match("op", method: :op)
-      match(/join (#[A-Z0-9_-]+)/i, method: :join)
-      match(/part (#[A-Z0-9_-]+)/i, method: :part)
+      match(/join (\S+)/i, method: :join)
+      match(/part (\S+)/i, method: :part)
 
       def op(m)
         if m.channel
