@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'cgi'
 require 'open-uri'
 require "nokogiri"
@@ -7,6 +8,8 @@ module Cinch
     class Etymology
       include Cinch::Plugin
       enable_acl
+
+      self.help = "etym|etymology <term> – Check the etymology of a term"
 
       match(/etym(?:ology)? (.+)/)
       def execute(m, term)
