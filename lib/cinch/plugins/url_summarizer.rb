@@ -122,7 +122,8 @@ module Cinch
         URI.extract(m.message, ["http", "https"]).each do |link|
           uri = URI.parse(link)
           head = @agent.head(link)
-          if !["text/html", "application/xhtml+xml"].include?(head["content-type"]) || head["content-length"].to_i > 200000
+          content_type = head["content-type"].to_s.split(";").first
+          if !["text/html", "application/xhtml+xml"].include?(content_type) || head["content-length"].to_i > 200000
             next
           end
 
