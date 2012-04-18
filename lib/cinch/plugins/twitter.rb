@@ -28,8 +28,12 @@ module Cinch
         @seen = Hash.new { |hash, key| hash[key] = [] }
 
         Timer(config[:poll_interval]) do
-          poll_timeline
-          poll_searches
+          begin
+            poll_timeline
+            poll_searches
+          rescue Twitter::Error::ServiceUnavailable
+            info "Twitter is currently unavailable"
+          end
         end
       end
 
