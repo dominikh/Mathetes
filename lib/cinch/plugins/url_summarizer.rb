@@ -157,11 +157,11 @@ module Cinch
             if uri.fragment =~ /^!\/.+?\/status\/(\d+)$/
               open("https://twitter.com/statuses/show/#{$1}.json",
                  :ssl_verify_mode => OpenSSL::SSL::VERIFY_NONE) do |http|
-              json = http.read
-              tweet = JSON.parse(json)
-              escaped_text = CGI.unescapeHTML(tweet['text'])
-              m.reply "[#{Format(:bold, "twitter")}] <#{tweet[ 'user' ][ 'screen_name' ]}> #{escaped_text}"
-            end
+                json = http.read
+                tweet = JSON.parse(json)
+                escaped_text = CGI.unescapeHTML(tweet['text'])
+                m.reply "[#{Format(:bold, "twitter")}] <#{tweet[ 'user' ][ 'screen_name' ]}> #{escaped_text}"
+              end
             end
           when "github.com"
             if uri.path =~ /\/(.+?)\/commit\//
@@ -183,7 +183,7 @@ module Cinch
             end
           else
             title = page.title.gsub(/[\x00-\x1f]*/, "").gsub(/[ ]{2,}/, " ").strip rescue nil
-            m.reply title
+            m.reply "[URL] " + title
           end
         end
       end
