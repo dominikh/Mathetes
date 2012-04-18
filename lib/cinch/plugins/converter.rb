@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Uses Google to convert just about anything to anything else (units, currency, etc.)
 
 # By Pistos - irc.freenode.net#geoshell
@@ -14,6 +15,8 @@ module Cinch
     class Converter
       include Cinch::Plugin
       enable_acl
+
+      self.help = "conv|convert|calc <expression> – Use Google to do conversions and calculations"
 
       match(/(?:conv(?:ert)|calc) +(.*)$/)
       def execute(m, arg)
