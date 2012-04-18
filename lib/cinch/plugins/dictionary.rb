@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'open-uri'
 require 'nokogiri'
 
@@ -6,6 +7,8 @@ module Cinch
     class Dictionary
       include Cinch::Plugin
       enable_acl
+
+      self.help = "d|dict <word> – Look up a word"
 
       match(/d(?:ict)? (.+)/)
       def execute(m, arg)
