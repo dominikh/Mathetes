@@ -1,0 +1,159 @@
+---
+:server: chat.freenode.net
+:nick: MyBot
+:user: MyBot
+:realname: MyBot
+:channels:
+  - '#somechannel'
+  - '#anotherchannel'
+:sasl:
+  :username: "username"
+  :password: "password"
+:plugins:
+  :plugins:
+    - 'Cinch::Plugins::ChannelUtil'
+    - 'Cinch::Plugins::Converter'
+    - 'Cinch::Plugins::Dictionary'
+    - 'Cinch::Plugins::DownForEveryone'
+    - 'Cinch::Plugins::Etymology'
+    - 'Cinch::Plugins::GitHubHook'
+    - 'Cinch::Plugins::GoogleFight'
+    - 'Cinch::Plugins::Google'
+    - 'Cinch::Plugins::Kicker'
+    - 'Cinch::Plugins::LastSpoke'
+    - 'Cinch::Plugins::Memo'
+    - 'Cinch::Plugins::Pun'
+    - 'Cinch::Plugins::RSS'
+    - 'Cinch::Plugins::RequestOpOnJoin'
+    - 'Cinch::Plugins::RussianRoulette'
+    - 'Cinch::Plugins::Spell'
+    - 'Cinch::Plugins::TimeDate'
+    - 'Cinch::Plugins::Translate'
+    - 'Cinch::Plugins::Twitter'
+    - 'Cinch::Plugins::URLSummarizer'
+    - 'Cinch::Plugins::Ideone'
+    - 'Cinch::Plugins::PluginManagement'
+    - 'Cinch::Plugins::Haiku'
+    - 'Cinch::Plugins::Eval'
+  :options:
+    Cinch::Plugins::RequestOpOnJoin:
+      :channels:
+        - '#somechannel'
+    Cinch::Plugins::RussianRoulette:
+      :also_ban: true
+      :ban_time: 60
+    Cinch::Plugins::TimeDate:
+      :default_timezone: "UTC"
+      :format: "The current time in %Z is %H:%M. The date is %m/%d/%Y"
+    Cinch::Plugins::Google:
+      :max_results: 5
+    Cinch::Plugins::Ideone:
+      :max_result_length: 256
+    Cinch::Plugins::Kicker:
+      :channels:
+        - '#somechannel'
+      :watchlist:
+        scry:
+          - :regexps:
+            - !ruby/regexp "/^(\\S+): chamber \\d of \\d => \\*BANG\\*/"
+            :reasons:
+              - You just shot yourself!
+              - Suicide is never the answer.
+              - If you wanted to leave, you could have just said so...
+              - Good thing these aren't real bullets...
+        ? !ruby/regexp /.+/
+        :
+          - :regexps:
+            - !ruby/regexp /kickme/
+            - !ruby/regexp /\banus\b/i
+            - !ruby/regexp /\bcock\b/i
+            - !ruby/regexp /\bfag\b/i
+            - !ruby/regexp /\bgive me head\b/i
+            - !ruby/regexp /\bnigga\b/i
+            - !ruby/regexp /\bnigger\b/i
+            - !ruby/regexp /\btits\b/i
+            - !ruby/regexp /\btitties\b/i
+            - !ruby/regexp /\bturds?\b/i
+            - !ruby/regexp /\bmy wang\b/i
+            - !ruby/regexp /anal sex/i
+            - !ruby/regexp /asshole/i
+            - !ruby/regexp /my balls/i
+            - !ruby/regexp /bitch/i
+            - !ruby/regexp /blow ?job/i
+            - !ruby/regexp /cunt/i
+            - !ruby/regexp /dick/i
+            - !ruby/regexp /dumbass/i
+            - !ruby/regexp /fuck/i
+            - !ruby/regexp /masturbat/i
+            - !ruby/regexp /oral sex/i
+            - !ruby/regexp /orgasm/i
+            - !ruby/regexp /penis/i
+            - !ruby/regexp /pussy/i
+            - !ruby/regexp /pussies/i
+            - !ruby/regexp /shit/i
+            - !ruby/regexp /suck my/i
+            - !ruby/regexp /vagina/i
+            :reasons:
+            - Watch your language.
+            - Watch your mouth.
+            - Go wash your mouth out with soap.
+            - Keep it clean.
+            - Don't be vulgar.
+            - No foul language.
+            - No vulgarity.
+            :exempted:
+            - Pistos
+            - Grace
+            - scry
+            - Gherkins
+            - MathetesUnloved
+            - SpyBot
+    Cinch::Plugins::Spell:
+      :max_word_length: 50
+      :num_suggestions: 15
+    Cinch::Plugins::RSS:
+      :feeds:
+        http://groups.google.com/group/ramaze/feed/rss_v2_0_msgs.xml:
+          :channels:
+          - "#ramaze"
+          :interval: 3600
+        http://www.google.com/alerts/feeds/13535865067391668311/1085272382843306248:
+          :channels:
+          - "#ramaze"
+          :interval: 3600
+    Cinch::Plugins::Twitter:
+      :consumer_key: "your consumer key"
+      :consumer_secret: "your consumer secret"
+      :oauth_token: "your oauth token"
+      :oauth_token_secret: "your oauth token secret"
+      :poll_interval: 180
+      :channels:
+        webbynode:
+        - "#webbynode"
+        ramazetest:
+        - "#mathetes"
+      :filters:
+      - !ruby/regexp /^RT /
+      - !ruby/regexp /rubysoftwaredevelopment\.com/
+      - !ruby/regexp /ramaze ruby developers - http:/
+      - !ruby/regexp /Kantor PCP RDBI/
+      - !ruby/regexp /NanoC/
+      - !ruby/regexp /\.[a-z]{2,3}\/rdbi/i
+      :searches:
+        ramaze:
+        - "#ramaze"
+    Cinch::Plugins::URLSummarizer:
+      :channel_blacklist:
+      - "#rendergos"
+      :byte_limit: 8192
+    Cinch::Plugins::Memo:
+      :db: "memos.yml"
+      :ignore:
+        - "Gherkins"
+        - "Mathetes"
+        - "GeoBot"
+        - "scry"
+      :public_reading_threshold: 2
+      :max_per_person: 20
+    Cinch::Plugins::Haiku:
+      :delay: 3
